@@ -12,16 +12,13 @@ from datetime import datetime, timezone
 import logging
 import sys
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src'))
-
+# Import local modules
 from smb_panel import SMBApiClient
 from redeem_db import RedeemDatabase
 from link_validator import LinkValidator
 
-# Load environment variables
-config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config', '.env')
-load_dotenv(config_path)
+# Load environment variables from .env file or environment
+load_dotenv()
 
 # Configure logging
 log_level = os.getenv('LOG_LEVEL', 'INFO')
@@ -40,7 +37,8 @@ CORS(app)
 smb_client = SMBApiClient(api_key=os.getenv('SMBPANEL_API_KEY'))
 
 # Initialize Redeem Database
-db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'redeem_codes.db')
+db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'redeem_codes.db')
+os.makedirs(os.path.dirname(db_path), exist_ok=True)
 redeem_db = RedeemDatabase(db_path)
 
 # Configuration
