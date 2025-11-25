@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AccVaults</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6">
+    <!-- Header -->
+    <div class="max-w-7xl mx-auto mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    <i class="fas fa-shield-alt mr-3"></i>Admin Dashboard
+                </h1>
+                <p class="text-white text-opacity-80">AccVaults Management Panel</p>
+            </div>
+            <div class="text-right">
+                <p class="text-white text-opacity-80 text-sm">API Key Required</p>
+                <button onclick="logout()" class="mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="card p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold mb-6 text-center">
+                <i class="fas fa-lock mr-2"></i>Admin Login
+            </h2>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">API Key</label>
+                    <input 
+                        type="password" 
+                        id="apiKeyInput" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Enter your admin API key"
+                        required
+                    >
+                </div>
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                </button>
+            </form>
+            <div id="loginError" class="hidden mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="hidden max-w-7xl mx-auto">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white text-opacity-80 text-sm">Balance</p>
+                        <h3 id="balance" class="text-3xl font-bold">$0.00</h3>
+                    </div>
+                    <i class="fas fa-wallet text-4xl text-white text-opacity-30"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white text-opacity-80 text-sm">Total Codes</p>
+                        <h3 id="totalCodes" class="text-3xl font-bold">0</h3>
+                    </div>
+                    <i class="fas fa-ticket-alt text-4xl text-white text-opacity-30"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white text-opacity-80 text-sm">Unused Codes</p>
+                        <h3 id="unusedCodes" class="text-3xl font-bold">0</h3>
+                    </div>
+                    <i class="fas fa-check-circle text-4xl text-white text-opacity-30"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white text-opacity-80 text-sm">Redemptions</p>
+                        <h3 id="totalRedemptions" class="text-3xl font-bold">0</h3>
+                    </div>
+                    <i class="fas fa-gift text-4xl text-white text-opacity-30"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button onclick="switchTab('codes')" id="tab-codes" class="tab-button border-b-2 border-purple-500 py-4 px-1 text-purple-600 font-medium">
+                        <i class="fas fa-ticket-alt mr-2"></i>Codes
+                    </button>
+                    <button onclick="switchTab('redemptions')" id="tab-redemptions" class="tab-button border-b-2 border-transparent py-4 px-1 text-gray-500 hover:text-gray-700 font-medium">
+                        <i class="fas fa-history mr-2"></i>Redemptions
+                    </button>
+                    <button onclick="switchTab('services')" id="tab-services" class="tab-button border-b-2 border-transparent py-4 px-1 text-gray-500 hover:text-gray-700 font-medium">
+                        <i class="fas fa-list mr-2"></i>Services
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Codes Tab -->
+        <div id="content-codes" class="tab-content">
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">Redemption Codes</h2>
+                    <div class="flex gap-2">
+                        <select id="codeStatusFilter" onchange="loadCodes()" class="px-4 py-2 border border-gray-300 rounded-lg">
+                            <option value="">All Status</option>
+                            <option value="unused">Unused</option>
+                            <option value="used">Used</option>
+                        </select>
+                        <button onclick="loadCodes()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-sync mr-2"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="codesTable" class="overflow-x-auto">
+                    <p class="text-gray-500 text-center py-8">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redemptions Tab -->
+        <div id="content-redemptions" class="tab-content hidden">
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">Redemption History</h2>
+                    <button onclick="loadRedemptions()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-sync mr-2"></i>Refresh
+                    </button>
+                </div>
+                <div id="redemptionsTable" class="overflow-x-auto">
+                    <p class="text-gray-500 text-center py-8">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Tab -->
+        <div id="content-services" class="tab-content hidden">
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">Available Services</h2>
+                    <button onclick="loadServices()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-sync mr-2"></i>Refresh
+                    </button>
+                </div>
+                <div id="servicesTable" class="overflow-x-auto">
+                    <p class="text-gray-500 text-center py-8">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apiKey = localStorage.getItem('adminApiKey') || '';
+
+        // Check if already logged in
+        if (apiKey) {
+            login(apiKey);
+        }
+
+        // Login form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const key = document.getElementById('apiKeyInput').value;
+            login(key);
+        });
+
+        async function login(key) {
+            try {
+                const response = await fetch('/api/admin/balance', {
+                    headers: { 'X-API-Key': key }
+                });
+
+                if (response.ok) {
+                    apiKey = key;
+                    localStorage.setItem('adminApiKey', key);
+                    document.getElementById('loginModal').classList.add('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+                    loadDashboard();
+                } else {
+                    document.getElementById('loginError').textContent = 'Invalid API key';
+                    document.getElementById('loginError').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('loginError').textContent = 'Connection error';
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminApiKey');
+            location.reload();
+        }
+
+        async function loadDashboard() {
+            await Promise.all([
+                loadBalance(),
+                loadCodes(),
+                loadRedemptions()
+            ]);
+        }
+
+        async function loadBalance() {
+            try {
+                const response = await fetch('/api/admin/balance', {
+                    headers: { 'X-API-Key': apiKey }
+                });
+                const data = await response.json();
+                if (data.success && data.data.balance) {
+                    document.getElementById('balance').textContent = '$' + parseFloat(data.data.balance).toFixed(2);
+                }
+            } catch (error) {
+                console.error('Error loading balance:', error);
+            }
+        }
+
+        async function loadCodes() {
+            const status = document.getElementById('codeStatusFilter')?.value || '';
+            try {
+                const url = status ? `/api/admin/codes?status=${status}` : '/api/admin/codes';
+                const response = await fetch(url, {
+                    headers: { 'X-API-Key': apiKey }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const codes = data.data.codes;
+                    document.getElementById('totalCodes').textContent = codes.length;
+                    document.getElementById('unusedCodes').textContent = codes.filter(c => c.status === 'unused').length;
+                    
+                    const table = `
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platform</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${codes.map(code => `
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap font-mono text-sm">${code.code}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">${code.platform}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">${code.service_type}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">${code.quantity.toLocaleString()}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 py-1 text-xs rounded-full ${code.status === 'unused' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                                ${code.status}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(code.created_date).toLocaleDateString()}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                    document.getElementById('codesTable').innerHTML = table;
+                }
+            } catch (error) {
+                console.error('Error loading codes:', error);
+            }
+        }
+
+        async function loadRedemptions() {
+            try {
+                const response = await fetch('/api/admin/redemptions', {
+                    headers: { 'X-API-Key': apiKey }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const redemptions = data.data.redemptions;
+                    document.getElementById('totalRedemptions').textContent = redemptions.length;
+                    
+                    const table = `
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${redemptions.map(r => `
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap font-mono text-sm">${r.code}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">${r.username}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">${r.service_id}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">${r.quantity.toLocaleString()}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">#${r.order_id}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(r.redeemed_date).toLocaleString()}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                    document.getElementById('redemptionsTable').innerHTML = table;
+                }
+            } catch (error) {
+                console.error('Error loading redemptions:', error);
+            }
+        }
+
+        async function loadServices() {
+            try {
+                const response = await fetch('/api/services');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const services = data.data.services.slice(0, 50); // Show first 50
+                    
+                    const table = `
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Min/Max</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${services.map(s => `
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${s.service}</td>
+                                        <td class="px-6 py-4 text-sm">${s.name}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">${s.category}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">$${s.rate}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">${s.min} / ${s.max}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <p class="text-gray-500 text-sm mt-4 text-center">Showing first 50 services</p>
+                    `;
+                    document.getElementById('servicesTable').innerHTML = table;
+                }
+            } catch (error) {
+                console.error('Error loading services:', error);
+            }
+        }
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-purple-500', 'text-purple-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('border-transparent', 'text-gray-500');
+            document.getElementById(`tab-${tab}`).classList.add('border-purple-500', 'text-purple-600');
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+
+            // Load data if needed
+            if (tab === 'services' && document.getElementById('servicesTable').textContent.includes('Loading')) {
+                loadServices();
+            }
+        }
+    </script>
+</body>
+</html>
