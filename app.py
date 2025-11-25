@@ -37,9 +37,16 @@ CORS(app)
 smb_client = SMBApiClient(api_key=os.getenv('SMBPANEL_API_KEY'))
 
 # Initialize Redeem Database
-db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'redeem_codes.db')
-os.makedirs(os.path.dirname(db_path), exist_ok=True)
-redeem_db = RedeemDatabase(db_path)
+# Use PostgreSQL if DATABASE_URL is set, otherwise fallback to SQLite
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    logger.info(f"Using PostgreSQL database")
+    redeem_db = RedeemDatabase(DATABASE_URL)
+else:
+    logger.info(f"Using SQLite database (fallback)")
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'redeem_codes.db')
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    redeem_db = RedeemDatabase(db_path)
 
 # Configuration
 SELLAUTH_WEBHOOK_SECRET = os.getenv('SELLAUTH_WEBHOOK_SECRET', '')
