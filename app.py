@@ -405,6 +405,38 @@ def admin_get_redemptions():
         logger.error(f"Error fetching redemptions: {e}")
         return create_response(False, str(e)), 500
 
+@app.route('/api/order-status', methods=['GET'])
+def order_status():
+    """Get SMB Panel order status by order_id"""
+    try:
+        order_id = request.args.get('order_id')
+
+        if not order_id:
+            return create_response(False, "order_id is required"), 400
+
+        # Call SMB Panel API for status
+        status_result = smb_client.get_order_status(int(order_id))
+
+        # If SMB Panel didn't return a status field, treat as error
+        if not isinstance(status_result, dict) or 'status' not in status_result:
+            return create_response(False, "Failed to fetch order status", {
+                'raw': status_result
+            })
+
+        data = {
+            'order_id': int(order_id),
+            'status': status_result.get('status', 'Unknown'),
+            'remains': status_result.get('remains'),
+            'charge': status_result.get('charge'),
+            'start_count': status_result.get('start_count'),
+            'raw': status_result
+        }
+
+        return create_response(True, "Status fetched", data)
+    except Exception as e:
+        logger.error(f"Error fetching order status: {e}")
+        return create_response(False, str(e)), 500
+
 # Sellauth webhook endpoint
 @app.route('/webhook/sellauth', methods=['POST'])
 def sellauth_webhook():
