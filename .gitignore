@@ -46,7 +46,7 @@ Thumbs.db
 *.log
 logs/
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
+# Database (allow redeem_codes.db to be tracked)
+# *.db
+# *.sqlite
+# *.sqlite3
