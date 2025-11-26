@@ -229,13 +229,13 @@ def redeem_code():
         if not code or not link:
             return create_response(False, "Code and link are required")
         
-        # Validate code
-        is_valid, message = redeem_db.is_code_valid(code)
-        if not is_valid:
-            return create_response(False, message)
-        
-        # Get code details
+        # Get code details and validate
         code_data = redeem_db.get_code(code)
+        if not code_data:
+            return create_response(False, "Invalid code")
+        
+        if code_data['status'] == 'used':
+            return create_response(False, "Code has already been used")
         
         # Validate link
         is_link_valid, link_message = LinkValidator.detect_link_type(
