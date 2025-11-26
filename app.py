@@ -40,10 +40,18 @@ smb_client = SMBApiClient(api_key=os.getenv('SMBPANEL_API_KEY'))
 # Use PostgreSQL if DATABASE_URL is set, otherwise fallback to SQLite
 DATABASE_URL = os.getenv('DATABASE_URL')
 if DATABASE_URL:
-    logger.info(f"Using PostgreSQL database")
-    redeem_db = RedeemDatabase(DATABASE_URL)
+    try:
+        logger.info(f"Attempting to connect to PostgreSQL database")
+        redeem_db = RedeemDatabase(DATABASE_URL)
+        logger.info(f"Successfully connected to PostgreSQL database")
+    except Exception as e:
+        logger.error(f"Failed to connect to PostgreSQL: {e}")
+        logger.info(f"Falling back to SQLite database")
+        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'redeem_codes.db')
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        redeem_db = RedeemDatabase(db_path)
 else:
-    logger.info(f"Using SQLite database (fallback)")
+    logger.info(f"Using SQLite database (no DATABASE_URL set)")
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'redeem_codes.db')
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
     redeem_db = RedeemDatabase(db_path)
