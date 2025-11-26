@@ -298,19 +298,39 @@ def validate_code():
         if not code:
             return create_response(False, "Code is required")
         
-        is_valid, message = redeem_db.is_code_valid(code)
+        # Check if code exists and get details
+        code_data = redeem_db.get_code(code)
+        if not code_data:
+            return create_response(False, "Invalid code")
         
-        if is_valid:
-            code_data = redeem_db.get_code(code)
-            return create_response(True, "Code is valid", {
-                'platform': code_data['platform'],
-                'service_type': code_data['service_type'],
-                'quantity': code_data['quantity'],
-                'requirements': code_data.get('requirements', ''),
-                'has_refill': code_data.get('has_refill', False)
-            })
-        else:
-            return create_response(False, message)
+        # Check if code is already used
+        if code_data['status'] == 'used':
+            return create_response(False, "Code has already been used")
+        
+        # Check if code is expired (if expiry_days is set)
+        if code_data.get('expiry_days'):
+            from datetime import datetime, timedelta
+            try:
+                created_date_str = str(code_data['created_date'])
+                if 'T' in created_date_str:
+                    created_date = datetime.fromisoformat(created_date_str.replace('Z', '+00:00'))
+                else:
+                    created_date = datetime.fromisoformat(created_date_str)
+                
+                expiry_date = created_date + timedelta(days=code_data['expiry_days'])
+                if datetime.utcnow() > expiry_date:
+                    return create_response(False, "Code has expired")
+            except:
+                pass  # If date parsing fails, assume code is still valid
+        
+        # Code is valid, return details
+        return create_response(True, "Code is valid", {
+            'platform': code_data['platform'],
+            'service_type': code_data['service_type'],
+            'quantity': code_data['quantity'],
+            'requirements': code_data.get('requirements', ''),
+            'has_refill': code_data.get('has_refill', False)
+        })
             
     except Exception as e:
         logger.error(f"Error validating code: {e}")
